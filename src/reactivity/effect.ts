@@ -1,5 +1,12 @@
+
+import { extend } from "../shared"
+
 class ReactiveEffect {
-  private _fn
+  private _fn: () => Function
+  private _active: boolean = true // 当前对象是否为响应式
+  private onStop?: () => void
+
+  public deps: Set<ReactiveEffect>[] = []
 
   constructor(fn, public scheduler?) {
     this._fn = fn
@@ -9,6 +16,19 @@ class ReactiveEffect {
     activeEffect = this
     return this._fn()
   }
+
+  /** 停止触发依赖 */
+  stop() {
+    if (this._active) {
+      cleanupEffect(this)
+      this.onStop && this.onStop()
+      this._active = false
+    }
+  }
+}
+
+export function cleanupEffect(effect: ReactiveEffect) {
+  effect.deps.forEach((dep) => dep.delete(effect))
 }
 
 const targetMap = new Map()
@@ -25,7 +45,9 @@ export function track(target, key) {
     depsMap.set(key, (deps = new Set()))
   }
 
+  if (!activeEffect) return
   deps.add(activeEffect)
+  activeEffect.deps.push(deps)
 }
 
 /** 触发依赖 */
@@ -42,14 +64,22 @@ export function trigger(target, key) {
   }
 }
 
-let activeEffect: any
-export function effect(fn, options: any = {}): () => any {
+/** 停止触发依赖更新 */
+export function stop(runner) {
+  runner._effect.stop()
+}
 
-  const { scheduler }  = options
+let activeEffect: ReactiveEffect
+export function effect(fn, options: any = {}): () => any {
+  const { scheduler } = options
   const _effect = new ReactiveEffect(fn, scheduler)
+  extend(_effect, options)
 
   _effect.run()
 
   // bind the effect 解决 run() 中的 this 指向问题
-  return _effect.run.bind(_effect)
+  const runner: any = _effect.run.bind(_effect)
+  runner._effect = _effect // 记录 effect
+
+  return runner
 }
