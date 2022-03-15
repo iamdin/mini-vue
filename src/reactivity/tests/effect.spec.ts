@@ -80,7 +80,9 @@ describe('reactivity', () => {
     obj.prop = 2
     expect(dummy).toBe(2)
     stop(runner)
-    obj.prop = 3
+    // obj.prop = 3
+    // obj.prop++ => obj.prop = obj.prop + 1 => get + set, 会重新触发依赖收集，导致 stop 失败
+    obj.prop++
     expect(dummy).toBe(2)
 
     // stopped effect should still be manually callable
