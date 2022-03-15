@@ -1,4 +1,5 @@
 import { track, trigger } from './effect'
+import { ReactiveFlags } from './reactive'
 
 const get = createGetter()
 const set = createSetter()
@@ -7,6 +8,13 @@ const readonlyGet = createGetter(true)
 /** proxy get */
 function createGetter(isReadOnly: boolean = false) {
   return function get(target: any, key: string) {
+    /** 判断对象是否为响应式，直接通过代理的方式，当 访问的 key 为 _isReactive 时进行拦截 */
+    if (key === ReactiveFlags.IS_REACTIVE) {
+      return !isReadOnly
+    } else if (key === ReactiveFlags.IS_READONLY) {
+      return isReadOnly
+    }
+
     const res = Reflect.get(target, key)
 
     if (!isReadOnly) {
