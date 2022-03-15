@@ -1,13 +1,14 @@
-import { isObject } from '../shared'
+import { extend, isObject } from '../shared'
 import { track, trigger } from './effect'
 import { reactive, readonly, ReactiveFlags } from './reactive'
 
 const get = createGetter()
 const set = createSetter()
 const readonlyGet = createGetter(true)
+const shallowReadonlyGet = createGetter(true, true)
 
 /** proxy get */
-function createGetter(isReadOnly: boolean = false) {
+function createGetter(isReadOnly = false, shallow = false) {
   return function get(target: any, key: string) {
     /** 判断对象是否为响应式，直接通过代理的方式，当 访问的 key 为 _isReactive 时进行拦截 */
     if (key === ReactiveFlags.IS_REACTIVE) {
@@ -17,6 +18,11 @@ function createGetter(isReadOnly: boolean = false) {
     }
 
     const res = Reflect.get(target, key)
+
+    // shallow
+    if (shallow) {
+      return res
+    }
 
     // nested track
     if (isObject(res)) {
@@ -55,3 +61,7 @@ export const readonlyHandlers = {
     return true
   },
 }
+
+export const shallowReadonlyHandlers = extend({}, readonlyHandlers, {
+  get: shallowReadonlyGet,
+})
