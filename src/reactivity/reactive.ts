@@ -7,7 +7,7 @@ export function reactive(raw) {
 
       // 收集依赖
       track(target, key)
-      
+
       return res
     },
     set(target, key, value) {
@@ -17,6 +17,18 @@ export function reactive(raw) {
       trigger(target, key)
 
       return res
-    }
+    },
+  })
+}
+
+export function readonly(raw) {
+  return new Proxy(raw, {
+    get(target, key) {
+      return Reflect.get(target, key)
+    },
+    set(target, key) {
+      console.warn(`key: ${String(key)} set failed, target ${target} is readonly`)
+      return true
+    },
   })
 }
