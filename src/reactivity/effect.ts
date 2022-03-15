@@ -1,5 +1,7 @@
+import { extend } from '../shared'
 
-import { extend } from "../shared"
+let activeEffect: ReactiveEffect
+let shouldTrack: boolean
 
 class ReactiveEffect {
   private _fn: () => Function
@@ -13,8 +15,18 @@ class ReactiveEffect {
   }
 
   run() {
+    // 执行 fn 后会开始收集依赖
+    if (!this._active) {
+      return this._fn()
+    }
+
+    shouldTrack = true
     activeEffect = this
-    return this._fn()
+
+    const result = this._fn()
+
+    shouldTrack = false
+    return result
   }
 
   /** 停止触发依赖 */
@@ -29,11 +41,19 @@ class ReactiveEffect {
 
 export function cleanupEffect(effect: ReactiveEffect) {
   effect.deps.forEach((dep) => dep.delete(effect))
+  effect.deps.length = 0 // 优化
+}
+
+/** 判断当前是否正在收集依赖 */
+function isTracking(): boolean {
+  return shouldTrack && activeEffect !== void 0
 }
 
 const targetMap = new Map()
 /** 收集依赖 */
 export function track(target, key) {
+  if (!isTracking()) return
+
   // target -> key -> deps
   let depsMap = targetMap.get(target)
   if (!depsMap) {
@@ -45,7 +65,7 @@ export function track(target, key) {
     depsMap.set(key, (deps = new Set()))
   }
 
-  if (!activeEffect) return
+  if (deps.has(activeEffect)) return
   deps.add(activeEffect)
   activeEffect.deps.push(deps)
 }
@@ -69,7 +89,6 @@ export function stop(runner) {
   runner._effect.stop()
 }
 
-let activeEffect: ReactiveEffect
 export function effect(fn, options: any = {}): () => any {
   const { scheduler } = options
   const _effect = new ReactiveEffect(fn, scheduler)
