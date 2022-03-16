@@ -3,7 +3,7 @@ import { extend } from '../shared'
 let activeEffect: ReactiveEffect
 let shouldTrack: boolean
 
-class ReactiveEffect {
+export class ReactiveEffect {
   private _fn: () => Function
   private _active: boolean = true // 当前对象是否为响应式
   private onStop?: () => void
@@ -11,6 +11,7 @@ class ReactiveEffect {
   public deps: Set<ReactiveEffect>[] = []
 
   constructor(fn, public scheduler?) {
+    // scheduler 存在, 当触发依赖更新时, 会执行 scheduler, 而不是 effect._fn
     this._fn = fn
   }
 
