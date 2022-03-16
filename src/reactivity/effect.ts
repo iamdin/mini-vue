@@ -45,7 +45,7 @@ export function cleanupEffect(effect: ReactiveEffect) {
 }
 
 /** 判断当前是否正在收集依赖 */
-function isTracking(): boolean {
+export function isTracking(): boolean {
   return shouldTrack && activeEffect !== void 0
 }
 
@@ -65,6 +65,10 @@ export function track(target, key) {
     depsMap.set(key, (deps = new Set()))
   }
 
+  trackEffect(deps)
+}
+
+export function trackEffect(deps) {
   if (deps.has(activeEffect)) return
   deps.add(activeEffect)
   activeEffect.deps.push(deps)
@@ -75,6 +79,10 @@ export function trigger(target, key) {
   const depsMap = targetMap.get(target)
   const deps = depsMap.get(key)
 
+  triggerEffect(deps)
+}
+
+export function triggerEffect(deps) {
   for (const effect of deps) {
     if (effect.scheduler) {
       effect.scheduler()
