@@ -1,8 +1,8 @@
 import { extend } from '../shared'
 
-let activeEffect: ReactiveEffect
-let shouldTrack: boolean
 
+const targetMap = new WeakMap()
+let activeEffect: ReactiveEffect
 export class ReactiveEffect {
   private _fn: () => Function
   private _active: boolean = true // 当前对象是否为响应式
@@ -45,34 +45,53 @@ export function cleanupEffect(effect: ReactiveEffect) {
   effect.deps.length = 0 // 优化
 }
 
-/** 判断当前是否正在收集依赖 */
-export function isTracking(): boolean {
-  return shouldTrack && activeEffect !== void 0
+export function effect(fn, options: any = {}): () => any {
+  const { scheduler } = options
+  const _effect = new ReactiveEffect(fn, scheduler)
+  extend(_effect, options)
+
+  _effect.run()
+
+  // bind the effect 解决 run() 中的 this 指向问题
+  const runner: any = _effect.run.bind(_effect)
+  runner._effect = _effect // 记录 effect
+
+  return runner
 }
 
-const targetMap = new Map()
+/** 停止触发依赖更新 */
+export function stop(runner) {
+  runner._effect.stop()
+}
+
+
+export let shouldTrack = true
+
 /** 收集依赖 */
 export function track(target, key) {
-  if (!isTracking()) return
+  if (shouldTrack && activeEffect) {
+    // target -> key -> deps
+    let depsMap = targetMap.get(target)
+    if (!depsMap) {
+      targetMap.set(target, (depsMap = new Map()))
+    }
 
-  // target -> key -> deps
-  let depsMap = targetMap.get(target)
-  if (!depsMap) {
-    targetMap.set(target, (depsMap = new Map()))
+    let deps = depsMap.get(key)
+    if (!deps) {
+      depsMap.set(key, (deps = new Set()))
+    }
+
+    trackEffect(deps)
   }
-
-  let deps = depsMap.get(key)
-  if (!deps) {
-    depsMap.set(key, (deps = new Set()))
-  }
-
-  trackEffect(deps)
 }
 
 export function trackEffect(deps) {
-  if (deps.has(activeEffect)) return
-  deps.add(activeEffect)
-  activeEffect.deps.push(deps)
+  let shouldTrack = false
+  shouldTrack = !deps.has(activeEffect)
+  if (shouldTrack) {
+    deps.add(activeEffect)
+    activeEffect.deps.push(deps)
+  }
 }
 
 /** 触发依赖 */
@@ -93,21 +112,4 @@ export function triggerEffect(deps) {
   }
 }
 
-/** 停止触发依赖更新 */
-export function stop(runner) {
-  runner._effect.stop()
-}
 
-export function effect(fn, options: any = {}): () => any {
-  const { scheduler } = options
-  const _effect = new ReactiveEffect(fn, scheduler)
-  extend(_effect, options)
-
-  _effect.run()
-
-  // bind the effect 解决 run() 中的 this 指向问题
-  const runner: any = _effect.run.bind(_effect)
-  runner._effect = _effect // 记录 effect
-
-  return runner
-}

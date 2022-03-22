@@ -1,6 +1,7 @@
 import { reactive } from '../reactive'
 import { effect, stop } from '../effect'
-describe('reactivity', () => {
+
+describe('effect', () => {
   it('happy path', () => {
     const user = reactive({
       age: 10,
@@ -106,5 +107,26 @@ describe('reactivity', () => {
 
     stop(runner)
     expect(onStop).toBeCalledTimes(1)
+  })
+  
+  it('should discover new branches when running manually', () => {
+    let dummy
+    let run = false
+    const obj = reactive({ prop: 'value' })
+    const runner = effect(() => {
+      return (dummy = run ? obj.prop : 'other')
+    })
+
+    expect(dummy).toBe('other') // run = false, effect 执行时 dummy = 'other'
+    runner() // 手动调用 runner, 执行 effect.fn
+    expect(dummy).toBe('other') // run 不变, dummy 也不变
+    expect(runner()).toBe('other') // runner return
+    run = true // --------------------------------------------------
+    runner() // 手动调用 runner, 执行 effect.fn
+    expect(dummy).toBe('value') // run = true, dummy = 'value'
+    expect(runner()).toBe('value') // runner return
+
+    obj.prop = 'World' // 响应式仍然有效
+    expect(dummy).toBe('World')
   })
 })
