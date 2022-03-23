@@ -37,17 +37,12 @@ describe('effect', () => {
   })
 
   it('scheduler', () => {
-    // 1. effect 的第二个参数给定 一个 scheduler 函数
-    // 2. effect 第一次执行的时候执行 fn
-    // 3. 当响应式对象 update 时不会再执行 fn, 而是执行 schedule
-    // 4. 当再次执行 runner 函数时, 会再次执行 fn
-
+    // 传入参数存在 scheduler 时, 响应式对象更新不再执行 effect.fn, 而是 scheduler
     let dummy
     let run: any
     const scheduler = jest.fn(() => {
       run = runner
     })
-
     const obj = reactive({ foo: 1 })
     const runner = effect(
       () => {
@@ -55,16 +50,13 @@ describe('effect', () => {
       },
       { scheduler }
     )
-
     expect(scheduler).not.toHaveBeenCalled()
     expect(dummy).toBe(1)
-
     // should be called on first trigger
     obj.foo++
     expect(scheduler).toHaveBeenCalledTimes(1)
     // should not run yet
     expect(dummy).toBe(1)
-
     // manually run
     run()
     // should have run
@@ -108,8 +100,8 @@ describe('effect', () => {
     stop(runner)
     expect(onStop).toBeCalledTimes(1)
   })
-  
-  it('should discover new branches when running manually', () => {
+
+  it('runner, should discover new branches when running manually', () => {
     let dummy
     let run = false
     const obj = reactive({ prop: 'value' })

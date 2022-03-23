@@ -1,30 +1,32 @@
 import { extend } from '../shared'
 
+export type EffectScheduler = (...args: any[]) => any
+export type Dep = Set<ReactiveEffect>
+type KeyToDepMap = Map<any, Dep>
 
-const targetMap = new WeakMap()
+const targetMap = new WeakMap<any, KeyToDepMap>()
+
 let activeEffect: ReactiveEffect
-export class ReactiveEffect {
-  private _fn: () => Function
+
+export class ReactiveEffect<T = any> {
+
   private _active: boolean = true // 当前对象是否为响应式
   private onStop?: () => void
 
   public deps: Set<ReactiveEffect>[] = []
-
-  constructor(fn, public scheduler?) {
-    // scheduler 存在, 当触发依赖更新时, 会执行 scheduler, 而不是 effect._fn
-    this._fn = fn
-  }
+  // scheduler 存在, 当触发依赖更新时, 会执行 scheduler, 而不是 effect._fn
+  constructor(public fn: () => T, public scheduler: EffectScheduler | null = null) {}
 
   run() {
     // 执行 fn 后会开始收集依赖
     if (!this._active) {
-      return this._fn()
+      return this.fn()
     }
 
     shouldTrack = true
     activeEffect = this
 
-    const result = this._fn()
+    const result = this.fn()
 
     shouldTrack = false
     return result
@@ -45,10 +47,12 @@ export function cleanupEffect(effect: ReactiveEffect) {
   effect.deps.length = 0 // 优化
 }
 
-export function effect(fn, options: any = {}): () => any {
-  const { scheduler } = options
-  const _effect = new ReactiveEffect(fn, scheduler)
-  extend(_effect, options)
+export interface ReactiveEffectOptions {
+  scheduler?: EffectScheduler
+}
+
+export function effect<T = any>(fn: () => T, options?: ReactiveEffectOptions) {
+  const _effect = new ReactiveEffect(fn, options?.scheduler)
 
   _effect.run()
 
@@ -97,13 +101,16 @@ export function trackEffect(deps) {
 /** 触发依赖 */
 export function trigger(target, key) {
   const depsMap = targetMap.get(target)
+  if (!depsMap) {
+    return
+  }
   const deps = depsMap.get(key)
 
-  triggerEffect(deps)
+  triggerEffects(deps)
 }
 
-export function triggerEffect(deps) {
-  for (const effect of deps) {
+export function triggerEffects(dep) {
+  for (const effect of dep) {
     if (effect.scheduler) {
       effect.scheduler()
     } else {
