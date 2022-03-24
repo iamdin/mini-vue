@@ -20,20 +20,26 @@ describe('effect', () => {
   })
 
   it('runner', () => {
-    let foo = 10
-
+    const obj = reactive({ prop: 'value' })
+    let run = false
+    let dummy
     // 执行 effect 后返回 runner 函数
     // 执行 runner 函数后会在次执行 effect 中的 fn, 并 fn 的函数值
     const runner = effect(() => {
-      foo++
-      return 'bar'
+      return (dummy = run ? obj.prop : 'other')
     })
 
-    expect(foo).toBe(11)
-    const res = runner()
+    expect(dummy).toBe('other') // run = false, effect 执行时 dummy = 'other'
+    runner() // 手动调用 runner, 执行 effect.fn
+    expect(dummy).toBe('other') // run 不变, dummy 也不变
+    expect(runner()).toBe('other') // runner return
+    run = true // --------------------------------------------------
+    runner() // 手动调用 runner, 执行 effect.fn
+    expect(dummy).toBe('value') // run = true, dummy = 'value'
+    expect(runner()).toBe('value') // runner return
 
-    expect(foo).toBe(12)
-    expect(res).toBe('bar')
+    obj.prop = 'World' // 响应式仍然有效
+    expect(dummy).toBe('World')
   })
 
   it('scheduler', () => {
@@ -72,7 +78,7 @@ describe('effect', () => {
     })
     obj.prop = 2
     expect(dummy).toBe(2)
-    stop(runner)
+    stop(runner) // stop 接收 runner 作为参数，调用后不再对内部响应式对象进行监听
     // obj.prop = 3
     // obj.prop++ => obj.prop = obj.prop + 1 => get + set, 会重新触发依赖收集，导致 stop 失败
     obj.prop++
