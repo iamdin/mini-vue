@@ -7,17 +7,17 @@ export const enum ReactiveFlags {
 
 /** 响应式代理对象 */
 export function reactive(raw) {
-  return createActiveObject(raw, mutableHandlers)
+  return createReactiveObject(raw, mutableHandlers)
 }
 
 /** 只读代理对象 */
 export function readonly(raw) {
-  return createActiveObject(raw, readonlyHandlers)
+  return createReactiveObject(raw, readonlyHandlers)
 }
 
 /** 浅只读代理对象 */
 export function shallowReadonly(raw) {
-  return createActiveObject(raw, shallowReadonlyHandlers)
+  return createReactiveObject(raw, shallowReadonlyHandlers)
 }
 
 export function isReactive(value): boolean {
@@ -32,6 +32,6 @@ export function isProxy(value): boolean {
   return isReactive(value) || isReadonly(value)
 }
 
-function createActiveObject(raw, baseHandlers) {
+function createReactiveObject(raw, baseHandlers) {
   return new Proxy(raw, baseHandlers)
 }

@@ -84,6 +84,8 @@ export function stop(runner: ReactiveEffectRunner) {
 }
 
 export let shouldTrack = true
+
+/** 收集依赖 */
 export function track(target, key) {
   if (shouldTrack && activeEffect) {
     // target -> key -> deps

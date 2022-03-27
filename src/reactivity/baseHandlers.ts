@@ -3,7 +3,6 @@ import { track, trigger } from './effect'
 import { reactive, readonly, ReactiveFlags } from './reactive'
 
 const get = createGetter()
-const set = createSetter()
 const readonlyGet = createGetter(true)
 const shallowReadonlyGet = createGetter(true, true)
 
@@ -37,19 +36,18 @@ function createGetter(isReadOnly = false, shallow = false) {
   }
 }
 
-/** proxy set */
+const set = createSetter()
+
 function createSetter() {
-  return function set(target, key, value) {
-    const res = Reflect.set(target, key, value)
-
-    // 触发依赖
+  return function set(target, key, value, receiver) {
+    const res = Reflect.set(target, key, value, receiver)
+    // 触发依赖的 effect
     trigger(target, key)
-
     return res
   }
 }
 
-export const mutableHandlers = {
+export const mutableHandlers: ProxyHandler<object> = {
   get,
   set,
 }
