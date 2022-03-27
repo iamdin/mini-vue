@@ -8,7 +8,7 @@ const shallowReadonlyGet = createGetter(true, true)
 
 /** proxy get */
 function createGetter(isReadOnly = false, shallow = false) {
-  return function get(target: any, key: string) {
+  return function get(target: any, key: string, receiver) {
     /** 判断对象是否为响应式，直接通过代理的方式，当 访问的 key 为 _isReactive 时进行拦截 */
     if (key === ReactiveFlags.IS_REACTIVE) {
       return !isReadOnly
@@ -16,7 +16,7 @@ function createGetter(isReadOnly = false, shallow = false) {
       return isReadOnly
     }
 
-    const res = Reflect.get(target, key)
+    const res = Reflect.get(target, key, receiver)
 
     // shallow
     if (shallow) {
