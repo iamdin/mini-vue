@@ -1,4 +1,4 @@
-import { isProxy, isReactive, reactive } from '../reactive'
+import { reactive, isReactive, isProxy } from '../index'
 
 describe('reactive', () => {
   it('happy path', () => {

@@ -1,9 +1,8 @@
-import { isProxy, isReadonly, reactive, readonly } from '../reactive'
+import { isProxy, isReadonly, readonly } from '../index'
 
 describe('readonly', () => {
   it('happy path', () => {
-    // readonly cannot set
-    const original = reactive({ foo: 1, bar: { baz: 1 } })
+    const original = { foo: 1, bar: { baz: 2 } }
     const wrapped = readonly(original)
 
     expect(wrapped).not.toBe(original)
@@ -38,6 +37,15 @@ describe('readonly', () => {
     })
 
     user.age = 11
+  })
+
+  it('warn when call set', () => {
+    const original = { foo: 1, bar: { baz: 2 } }
+    const wrapped = readonly(original)
+
+    console.warn = jest.fn()
+
+    wrapped.foo = 2
     expect(console.warn).toBeCalled()
   })
 })
