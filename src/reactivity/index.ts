@@ -25,7 +25,7 @@ export {
   // isShallow,
   isProxy,
   // shallowReactive,
-  // shallowReadonly,
+  shallowReadonly,
   // markRaw,
   // toRaw,
   // ReactiveFlags,

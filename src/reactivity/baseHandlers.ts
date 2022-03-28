@@ -17,6 +17,12 @@ function createGetter(isReadonly = false, shallow = false) {
     }
 
     const res = Reflect.get(target, key, receiver)
+    
+    // 应放在前面
+    if (!isReadonly) {
+      // 收集依赖
+      track(target, key)
+    }
 
     // shallow
     if (shallow) {
@@ -28,14 +34,6 @@ function createGetter(isReadonly = false, shallow = false) {
       return isReadonly ? readonly(res) : reactive(res)
     }
 
-    if (isObject(res)) {
-      return isReadonly ? readonly(res) : reactive(res)
-    }
-
-    if (!isReadonly) {
-      // 收集依赖
-      track(target, key)
-    }
     return res
   }
 }
@@ -64,6 +62,6 @@ export const readonlyHandlers = {
   },
 }
 
-export const shallowReadonlyHandlers = extend({}, readonlyHandlers, {
+export const shallowReadonlyHandlers: ProxyHandler<object> = extend({}, readonlyHandlers, {
   get: shallowReadonlyGet,
 })
