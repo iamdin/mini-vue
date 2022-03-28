@@ -9,8 +9,9 @@ describe('readonly', () => {
     expect(wrapped.foo).toBe(1)
 
     // isReadonly
-    expect(isReadonly(wrapped)).toBe(true)
+    expect(isProxy(wrapped)).toBe(true)
     expect(isReadonly(original)).toBe(false)
+    expect(isReadonly(wrapped)).toBe(true)
 
     // isProxy
     expect(isProxy(wrapped)).toBe(true)
@@ -43,7 +44,7 @@ describe('readonly', () => {
       const original = { foo: 1, bar: { baz: 2 } }
       const wrapped = readonly(original)
       expect(wrapped).not.toBe(original)
-      // expect(isProxy(wrapped)).toBe(true)
+      expect(isProxy(wrapped)).toBe(true)
       expect(isReactive(wrapped)).toBe(false)
       expect(isReadonly(wrapped)).toBe(true)
       expect(isReactive(original)).toBe(false)

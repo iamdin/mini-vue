@@ -1,12 +1,14 @@
 import {
   mutableHandlers,
   readonlyHandlers,
+  shallowReactiveHandlers,
   shallowReadonlyHandlers,
 } from './baseHandlers'
 
 export const enum ReactiveFlags {
   IS_REACTIVE = '__v_isReactive',
-  IS_READONLY = '__v_isReadOnly',
+  IS_READONLY = '__v_isReadonly',
+  IS_SHALLOW = '__v_isShallow',
 }
 
 export interface Target {
@@ -20,6 +22,10 @@ export function reactive(raw) {
 }
 
 /** 只读代理对象 */
+export function shallowReactive(raw) {
+  return createReactiveObject(raw, shallowReactiveHandlers)
+}
+
 export function readonly(raw) {
   return createReactiveObject(raw, readonlyHandlers)
 }
@@ -37,7 +43,11 @@ export function isReadonly(value: unknown): boolean {
   return !!(value && (value as Target)[ReactiveFlags.IS_READONLY])
 }
 
-export function isProxy(value): boolean {
+export function isShallow(value: unknown): boolean {
+  return !!(value && (value as Target)[ReactiveFlags.IS_SHALLOW])
+}
+
+export function isProxy(value: unknown): boolean {
   return isReactive(value) || isReadonly(value)
 }
 

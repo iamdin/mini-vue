@@ -3,6 +3,7 @@ import { track, trigger } from './effect'
 import { reactive, readonly, ReactiveFlags } from './reactive'
 
 const get = createGetter()
+const shallowGet = createGetter(false, true)
 const readonlyGet = createGetter(true)
 const shallowReadonlyGet = createGetter(true, true)
 
@@ -14,6 +15,8 @@ function createGetter(isReadonly = false, shallow = false) {
       return !isReadonly
     } else if (key === ReactiveFlags.IS_READONLY) {
       return isReadonly
+    } else if (key === ReactiveFlags.IS_SHALLOW) {
+      return shallow
     }
 
     const res = Reflect.get(target, key, receiver)
@@ -39,8 +42,9 @@ function createGetter(isReadonly = false, shallow = false) {
 }
 
 const set = createSetter()
+const shallowSet = createSetter(true)
 
-function createSetter() {
+function createSetter(shallow = false) {
   return function set(target, key, value, receiver) {
     const res = Reflect.set(target, key, value, receiver)
     // 触发依赖的 effect
@@ -61,6 +65,11 @@ export const readonlyHandlers = {
     return true
   },
 }
+
+export const shallowReactiveHandlers: ProxyHandler<object> = extend({}, mutableHandlers, {
+  get: shallowGet,
+  set: shallowSet,
+})
 
 export const shallowReadonlyHandlers: ProxyHandler<object> = extend({}, readonlyHandlers, {
   get: shallowReadonlyGet,
