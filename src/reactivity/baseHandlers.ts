@@ -7,13 +7,13 @@ const readonlyGet = createGetter(true)
 const shallowReadonlyGet = createGetter(true, true)
 
 /** proxy get */
-function createGetter(isReadOnly = false, shallow = false) {
+function createGetter(isReadonly = false, shallow = false) {
   return function get(target: any, key: string, receiver) {
     /** 判断对象是否为响应式，直接通过代理的方式，当 访问的 key 为 _isReactive 时进行拦截 */
     if (key === ReactiveFlags.IS_REACTIVE) {
-      return !isReadOnly
+      return !isReadonly
     } else if (key === ReactiveFlags.IS_READONLY) {
-      return isReadOnly
+      return isReadonly
     }
 
     const res = Reflect.get(target, key, receiver)
@@ -25,10 +25,14 @@ function createGetter(isReadOnly = false, shallow = false) {
 
     // nested track
     if (isObject(res)) {
-      return isReadOnly ? readonly(res) : reactive(res)
+      return isReadonly ? readonly(res) : reactive(res)
     }
 
-    if (!isReadOnly) {
+    if (isObject(res)) {
+      return isReadonly ? readonly(res) : reactive(res)
+    }
+
+    if (!isReadonly) {
       // 收集依赖
       track(target, key)
     }
