@@ -22,17 +22,20 @@ export class ReactiveEffect<T = any> {
 
   run() {
     // 执行 fn 后会开始收集依赖
+    // 执行 run 后收集依赖，可以通过 shouldTrack 区分是否需要跟踪依赖
+    // 当 this.active = false, stop, 不需要跟踪依赖
     if (!this.active) {
       return this.fn()
     }
 
-    shouldTrack = true
-    activeEffect = this
+    try {
+      activeEffect = this
+      shouldTrack = true
 
-    const result = this.fn()
-
-    shouldTrack = false
-    return result
+      return this.fn()
+    } finally {
+      shouldTrack = false
+    }
   }
 
   stop() {
@@ -83,12 +86,14 @@ export function stop(runner: ReactiveEffectRunner) {
   runner.effect.stop()
 }
 
-export let shouldTrack = true
+export let shouldTrack = true // 解决某些情况下（stop），不需要跟踪依赖的问题
 
 /** 收集依赖 */
 export function track(target, key) {
   if (shouldTrack && activeEffect) {
     // target -> key -> deps
+    // shouldTrack 处理 stop 后不需要再跟踪依赖的问题
+    // 当直接访问 reactive 对象的属性时, activeEffect 为 undefined, 因为 activeEffect 是在 effect.run 中被赋值的
     let depsMap = targetMap.get(target)
     if (!depsMap) {
       targetMap.set(target, (depsMap = new Map()))
@@ -99,16 +104,16 @@ export function track(target, key) {
       depsMap.set(key, (deps = new Set()))
     }
 
-    trackEffect(deps)
+    trackEffects(deps)
   }
 }
 
-export function trackEffect(deps) {
+export function trackEffects(dep: Dep) {
   let shouldTrack = false
-  shouldTrack = !deps.has(activeEffect)
+  shouldTrack = !dep.has(activeEffect!)
   if (shouldTrack) {
-    deps.add(activeEffect)
-    activeEffect!.deps.push(deps)
+    dep.add(activeEffect!)
+    activeEffect!.deps.push(dep) // 反向收集依赖，让 effect 知道有内部哪些响应式对象
   }
 }
 
