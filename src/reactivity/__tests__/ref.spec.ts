@@ -38,8 +38,9 @@ describe('reactivity/ref', () => {
   })
 
   it('should make nested properties reactive', () => {
-    const obj = { count: 1 }
-    const a = ref(obj)
+    const a = ref({
+      count: 1,
+    })
     let dummy
     effect(() => {
       dummy = a.value.count
