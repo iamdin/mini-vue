@@ -1,3 +1,4 @@
+import { isObject } from '../shared'
 import {
   mutableHandlers,
   readonlyHandlers,
@@ -35,6 +36,10 @@ export function shallowReadonly(raw) {
   return createReactiveObject(raw, shallowReadonlyHandlers)
 }
 
+function createReactiveObject(target: Target, baseHandlers: ProxyHandler<any>) {
+  return new Proxy(target, baseHandlers)
+}
+
 export function isReactive(value: unknown): boolean {
   return !!(value && (value as Target)[ReactiveFlags.IS_REACTIVE])
 }
@@ -51,6 +56,5 @@ export function isProxy(value: unknown): boolean {
   return isReactive(value) || isReadonly(value)
 }
 
-function createReactiveObject(target: Target, baseHandlers: ProxyHandler<any>) {
-  return new Proxy(target, baseHandlers)
-}
+export const toReactive = <T extends unknown>(value: T): T =>
+  isObject(value) ? reactive(value) : value
