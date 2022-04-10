@@ -34,14 +34,14 @@ export {
   // ShallowReactive,
   // UnwrapNestedRefs
 } from './reactive'
-// export {
-//   computed,
+export {
+  computed,
 //   ComputedRef,
 //   WritableComputedRef,
 //   WritableComputedOptions,
 //   ComputedGetter,
 //   ComputedSetter
-// } from './computed'
+} from './computed'
 // export { deferredComputed } from './deferredComputed'
 export {
   effect,

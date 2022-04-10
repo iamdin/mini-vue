@@ -17,8 +17,7 @@ export interface Target {
   [ReactiveFlags.IS_READONLY]?: boolean
 }
 
-/** 响应式代理对象 */
-export function reactive(raw) {
+export function reactive<T extends object>(raw: T) {
   return createReactiveObject(raw, mutableHandlers)
 }
 
