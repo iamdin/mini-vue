@@ -1,7 +1,12 @@
 import { hasChanged } from '../shared'
 import { toReactive } from './reactive'
-import { activeEffect, Dep, shouldTrack, trackEffects, triggerEffects } from './effect'
-
+import {
+  activeEffect,
+  Dep,
+  shouldTrack,
+  trackEffects,
+  triggerEffects,
+} from './effect'
 
 export interface Ref<T = any> {
   value: T
@@ -59,20 +64,20 @@ class RefImpl<T> {
   }
 }
 
-export function proxyRefs(objectWithRefs) {
-  return new Proxy(objectWithRefs, {
-    get(target, key) {
-      return unref(Reflect.get(target, key))
-    },
-
-    set(target, key, value) {
-      // key is ref, value not ref, operate the value
-      if (isRef(target[key]) && !isRef(value)) {
-        return (target[key].value = value)
-      } else {
-        return Reflect.set(target, key, value)
-      }
-    },
-  })
+const shallowUnwrapHandlers: ProxyHandler<any> = {
+  get: (target, key, receiver) => unref(Reflect.get(target, key, receiver)),
+  set: (target, key, value, receiver) => {
+    const oldValue = target[key]
+    if (isRef(oldValue) && !isRef(value)) {
+      oldValue.value = value
+      return true
+    } else {
+      return Reflect.set(target, key, value, receiver)
+    }
+  },
 }
 
+/** ref '解包' */
+export function proxyRefs(objectWithRefs) {
+  return new Proxy(objectWithRefs, shallowUnwrapHandlers)
+}

@@ -7,6 +7,7 @@ import {
   // toRefs,
   Ref,
   unref,
+  proxyRefs,
 } from '../index'
 // import { shallowRef, unref, customRef, triggerRef } from '../src/ref'
 // import { isShallow } from '../src/reactive'
@@ -174,5 +175,29 @@ describe('reactivity/ref', () => {
     expect(isRef(1)).toBe(false)
     // an object that looks like a ref isn't necessarily a ref
     expect(isRef({ value: 0 })).toBe(false)
+  })
+
+  test('proxyRefs', () => {
+    const user = {
+      age: ref(1),
+      name: 'ref',
+    }
+    const proxyUser = proxyRefs(user)
+
+    // proxy get
+    expect(user.age.value).toBe(1)
+    expect(proxyUser.age).toBe(1)
+    expect(user.name).toBe('ref')
+    expect(proxyUser.name).toBe('ref')
+
+    // proxy set
+    proxyUser.age = 2
+    expect(user.age.value).toBe(2)
+    expect(proxyUser.age).toBe(2)
+
+    // proxy set ref
+    proxyUser.age = ref(3)
+    expect(user.age.value).toBe(3)
+    expect(proxyUser.age).toBe(3)
   })
 })
