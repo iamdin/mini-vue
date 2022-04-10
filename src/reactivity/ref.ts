@@ -1,20 +1,53 @@
-import { hasChanged, isObject } from '../shared'
-import { isTracking, trackEffect, triggerEffect } from './effect'
-import { reactive } from './reactive'
+import { hasChanged } from '../shared'
+import { toReactive } from './reactive'
+import {
+  activeEffect,
+  Dep,
+  shouldTrack,
+  trackEffects,
+  triggerEffects,
+} from './effect'
 
-/** 通过包装对象 RefImpl 的 get set value 方法，实现对原始值的包装 */
-class RefImpl {
-  private _value: any
-  private _rawValue: any
+export interface Ref<T = any> {
+  value: T
+}
 
-  public deps?: Set<any>
+export function trackRefValue(ref) {
+  if (shouldTrack && activeEffect) {
+    trackEffects(ref.dep)
+  }
+}
+
+export function isRef<T>(r: Ref<T> | unknown): r is Ref<T>
+export function isRef(r: any): r is Ref {
+  return !!(r && r.__v_isRef === true)
+}
+
+export function unref<T>(ref: T | Ref<T>): T {
+  return isRef(ref) ? (ref.value as any) : ref
+}
+
+export function ref(value?: unknown): any {
+  return createRef(value)
+}
+
+function createRef(rawValue: unknown) {
+  if (isRef(rawValue)) {
+    return rawValue
+  }
+  return new RefImpl(rawValue)
+}
+
+class RefImpl<T> {
+  private _value: T
+  private _rawValue: T
+  dep: Dep = new Set()
+
   public readonly __v_isRef = true
 
   constructor(value) {
-    // if ref value is object, should wrapped with reactive
     this._rawValue = value
-    this._value = isObject(value) ? reactive(value) : value
-    this.deps = new Set()
+    this._value = toReactive(value)
   }
 
   get value() {
@@ -25,43 +58,26 @@ class RefImpl {
   set value(newValue) {
     if (hasChanged(newValue, this._rawValue)) {
       this._rawValue = newValue
-      this._value = isObject(newValue) ? reactive(newValue) : newValue
-      triggerEffect(this.deps)
+      this._value = toReactive(newValue)
+      triggerEffects(this.dep)
     }
   }
 }
 
-function trackRefValue(ref) {
-  if (isTracking()) {
-    trackEffect(ref.deps)
-  }
+const shallowUnwrapHandlers: ProxyHandler<any> = {
+  get: (target, key, receiver) => unref(Reflect.get(target, key, receiver)),
+  set: (target, key, value, receiver) => {
+    const oldValue = target[key]
+    if (isRef(oldValue) && !isRef(value)) {
+      oldValue.value = value
+      return true
+    } else {
+      return Reflect.set(target, key, value, receiver)
+    }
+  },
 }
 
-export function ref(value) {
-  return new RefImpl(value)
-}
-
-export function isRef(ref) {
-  return !!(ref && ref.__v_isRef)
-}
-
-export function unRef(ref) {
-  return isRef(ref) ? ref.value : ref
-}
-
+/** ref '解包' */
 export function proxyRefs(objectWithRefs) {
-  return new Proxy(objectWithRefs, {
-    get(target, key) {
-      return unRef(Reflect.get(target, key))
-    },
-
-    set(target, key, value) {
-      // key is ref, value not ref, operate the value
-      if (isRef(target[key]) && !isRef(value)) {
-        return (target[key].value = value)
-      } else {
-        return Reflect.set(target, key, value)
-      }
-    },
-  })
+  return new Proxy(objectWithRefs, shallowUnwrapHandlers)
 }
