@@ -2,7 +2,8 @@
   "name": "tiny-vue",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "dist/mini-vue.cjs.js",
+  "module": "dist/mini-vue.esm-browser.js",
   "scripts": {
     "test": "jest",
     "build": "rollup -c rollup.config.js"
