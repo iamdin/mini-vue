@@ -7,7 +7,10 @@ const App = {
     }
   },
   render() {
-    return h('div', 'Hello ' + this.msg)
+    return h('div', { id: 'root', class: ['wrapper', 'red'] }, [
+      h('p', { class: 'red' }, 'hi vue'),
+      h('p', { class: 'blue' }, 'hhhh'),
+    ])
   },
 }
 
