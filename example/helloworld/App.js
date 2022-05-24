@@ -1,16 +1,23 @@
 import { h } from '../../dist/mini-vue.esm-browser.js'
 
+window.self = null
 const App = {
   setup() {
     return {
-      msg: 'mini-vue',
+      msg: 'mini-vue h',
     }
   },
   render() {
-    return h('div', { id: 'root', class: ['wrapper', 'red'] }, [
-      h('p', { class: 'red' }, 'hi vue'),
-      h('p', { class: 'blue' }, 'hhhh'),
-    ])
+    window.self = this
+    return h(
+      'div',
+      { id: 'root', class: ['wrapper', 'red'] },
+      `hi, ${this.msg}`
+      //  [
+      //   h('p', { class: 'red' }, 'hi vue'),
+      //   h('p', { class: 'blue' }, 'hhhh'),
+      // ]
+    )
   },
 }
 

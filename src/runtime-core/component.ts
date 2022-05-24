@@ -1,16 +1,19 @@
-import { isFunction, isObject, NOOP } from '../shared'
+import { hasOwn, isFunction, isObject, NOOP } from '../shared'
+import { PublicInstanceProxyHandlers } from './componentPublicInstance'
 
 export function createComponentInstance(vnode) {
   const type = vnode.type
 
-  const instance = {
+  const instance: any = {
     type,
     vnode,
   }
 
+  instance.ctx = { _: instance }
   return instance
 }
 
+/** 组件 setup 的执行 */
 export function setupComponent(instance) {
   // TODO
   // initProps()
@@ -18,9 +21,11 @@ export function setupComponent(instance) {
   setupStatefulComponent(instance)
 }
 
-/* */
+/** 执行 setup 获取其中的状态数据 */
 function setupStatefulComponent(instance) {
   const Component = instance.type
+
+  instance.proxy = new Proxy(instance.ctx, PublicInstanceProxyHandlers)
 
   const { setup } = Component
   if (setup) {
@@ -42,6 +47,7 @@ export function handleSetupResult(instance: any, setupResult: unknown) {
   finishComponentSetup(instance)
 }
 
+/** setup 后执行 compile 函数（如有需要），转换为 render */
 function finishComponentSetup(instance: any) {
   const Component = instance.type
   if (!Component.render) {
