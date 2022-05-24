@@ -12,11 +12,8 @@ const App = {
     return h(
       'div',
       { id: 'root', class: ['wrapper', 'red'] },
-      `hi, ${this.msg}`
-      //  [
-      //   h('p', { class: 'red' }, 'hi vue'),
-      //   h('p', { class: 'blue' }, 'hhhh'),
-      // ]
+      // `hi, ${this.msg}`
+      [h('p', { class: 'red' }, 'hi vue'), h('p', { class: 'blue' }, 'hhhh')]
     )
   },
 }
