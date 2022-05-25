@@ -12,10 +12,12 @@ export const publicPropertiesMap: PublicPropertiesMap = extend(
 /** proxy handlers 代理 vue 中的全局 API */
 export const PublicInstanceProxyHandlers = {
   get({ _: instance }, key) {
-    const { setupState } = instance
+    const { setupState, props } = instance
     if (key[0] !== '$') {
       if (hasOwn(setupState, key)) {
         return setupState[key]
+      } else if (hasOwn(props, key)) {
+        return props[key]
       }
     }
 
