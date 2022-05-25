@@ -11,7 +11,16 @@ const App = {
     window.self = this
     return h(
       'div',
-      { id: 'root', class: ['wrapper', 'red'] },
+      {
+        id: 'root',
+        class: ['wrapper', 'red'],
+        onClick() {
+          console.log('click')
+        },
+        onMousedown() {
+          console.log('mouse down')
+        },
+      },
       // `hi, ${this.msg}`
       [h('p', { class: 'red' }, 'hi vue'), h('p', { class: 'blue' }, 'hhhh')]
     )
