@@ -1,5 +1,8 @@
 export * from './shapeFlags'
 
+const onRE = /^on[^a-z]/
+export const isOn = (key: string) => onRE.test(key)
+
 export const extend = Object.assign
 
 export const isArray = Array.isArray
