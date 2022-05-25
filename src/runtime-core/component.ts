@@ -1,4 +1,6 @@
-import { hasOwn, isFunction, isObject, NOOP } from '../shared'
+import { shallowReadonly } from '../reactivity'
+import { isFunction, isObject, NOOP } from '../shared'
+import { initProps } from './componentProps'
 import { PublicInstanceProxyHandlers } from './componentPublicInstance'
 
 export function createComponentInstance(vnode) {
@@ -15,9 +17,9 @@ export function createComponentInstance(vnode) {
 
 /** 组件 setup 的执行 */
 export function setupComponent(instance) {
-  // TODO
-  // initProps()
-  // initSlots()
+  // 初始化组件 Props
+  initProps(instance, instance.vnode.props)
+  // TODO initSlots()
   setupStatefulComponent(instance)
 }
 
@@ -30,7 +32,11 @@ function setupStatefulComponent(instance) {
   const { setup } = Component
   if (setup) {
     // setupResult is function | object
-    const setupResult = setup(instance.props /* TODO context */)
+    const setupResult = setup(
+      // 将 props 作为参数传递给 setup, props 需要是 shallowReadonly
+      shallowReadonly(instance.props)
+      /* TODO context */
+    )
 
     handleSetupResult(instance, setupResult)
   }
