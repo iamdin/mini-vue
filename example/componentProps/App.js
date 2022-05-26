@@ -1,4 +1,5 @@
 import { h } from '../../dist/mini-vue.esm-browser.js'
+import { Foo } from './Foo.js'
 
 window.self = null
 const App = {
@@ -21,7 +22,7 @@ const App = {
           console.log('mouse down')
         },
       },
-      [h('p', { class: 'red' }, `hi ${this.msg}`)]
+      [h('p', { class: 'red' }, `hi ${this.msg}`), h(Foo, { count: 1 })]
     )
   },
 }
