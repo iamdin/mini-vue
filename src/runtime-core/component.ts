@@ -1,5 +1,6 @@
 import { shallowReadonly } from '../reactivity'
 import { isFunction, isObject, NOOP } from '../shared'
+import { emit } from './componentEmits'
 import { initProps } from './componentProps'
 import { PublicInstanceProxyHandlers } from './componentPublicInstance'
 
@@ -12,6 +13,8 @@ export function createComponentInstance(vnode) {
   }
 
   instance.ctx = { _: instance }
+  // 创建 emit 组件事件函数, 通过 emit 绑定 instance，也可使用闭包
+  instance.emit = emit.bind(null, instance)
   return instance
 }
 
@@ -34,8 +37,11 @@ function setupStatefulComponent(instance) {
     // setupResult is function | object
     const setupResult = setup(
       // 将 props 作为参数传递给 setup, props 需要是 shallowReadonly
-      shallowReadonly(instance.props)
+      shallowReadonly(instance.props),
       /* TODO context */
+      {
+        emit: instance.emit,
+      }
     )
 
     handleSetupResult(instance, setupResult)

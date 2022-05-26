@@ -21,3 +21,22 @@ export const hasOwn = (
   key: string | symbol
 ): key is keyof typeof val => hasOwnProperty.call(val, key)
 export const NOOP = () => {}
+
+const camelizeRE = /-(\w)/g
+/**
+ * @private
+ */
+export const camelize = (str: string): string => {
+  return str.replace(camelizeRE, (_, c) => (c ? c.toUpperCase() : ''))
+}
+
+/**
+ * @private
+ */
+export const capitalize = (str: string) =>
+  str.charAt(0).toUpperCase() + str.slice(1)
+
+/**
+ * @private
+ */
+export const toHandlerKey = (str: string) => (str ? `on${capitalize(str)}` : ``)
