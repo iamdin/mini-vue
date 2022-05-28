@@ -59,9 +59,9 @@ const processComponent = (vnode: any, container: any) => {
 }
 
 function mountComponent(initialVNode: any, container) {
-  // 创建组件实例
+  // 创建组件实例, 初始化 ctx, emit
   const instance = createComponentInstance(initialVNode)
-  // 执行组件的 setup
+  // initProps, initSlots, 执行组件的 setup 获取 setupState, 初始化 render (如有需要 compile)
   setupComponent(instance)
   // 执行组件的 render
   setupRenderEffect(instance, initialVNode, container)

@@ -22,7 +22,7 @@ const App = {
           console.log('mouse down')
         },
       },
-      [h('p', { class: 'red' }, `hi ${this.msg}`), h(Foo, { count: 1 })]
+      [h('p', { class: 'red' }, `hi ${this.msg}`), h(Foo, { count: 1 }, 'sss')]
     )
   },
 }
