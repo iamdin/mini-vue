@@ -1,5 +1,6 @@
 import { isArray, isObject, isOn, ShapeFlags } from '../shared'
 import { createComponentInstance, setupComponent } from './component'
+import { Fragment } from './vnode'
 
 export function render(vnode, container) {
   // patch
@@ -7,13 +8,23 @@ export function render(vnode, container) {
 }
 
 const patch = (vnode: any, container: any) => {
-  const { shapeFlag } = vnode
-  if (shapeFlag & ShapeFlags.ELEMENT) {
-    // 处理 Element
-    processElement(vnode, container)
-  } else if (shapeFlag & ShapeFlags.COMPONENT) {
-    // 处理 Component
-    processComponent(vnode, container)
+  const { type, shapeFlag } = vnode
+
+  switch (type) {
+    // Fragment 节点只渲染其子组件
+    case Fragment:
+      processFragment(vnode, container)
+      break
+
+    default:
+      if (shapeFlag & ShapeFlags.ELEMENT) {
+        // 处理 Element
+        processElement(vnode, container)
+      } else if (shapeFlag & ShapeFlags.COMPONENT) {
+        // 处理 Component
+        processComponent(vnode, container)
+      }
+      break
   }
 }
 
@@ -74,4 +85,7 @@ function setupRenderEffect(instance, initialVNode, container) {
   patch(subTree, container)
   // 将子元素的 dom 保存到当前节点的 vnode 中
   initialVNode.el = subTree.el
+}
+function processFragment(vnode: any, container: any) {
+  mountChildren(vnode.children, container)
 }
