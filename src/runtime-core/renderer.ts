@@ -1,6 +1,6 @@
 import { isArray, isObject, isOn, ShapeFlags } from '../shared'
 import { createComponentInstance, setupComponent } from './component'
-import { Fragment } from './vnode'
+import { Text, Fragment } from './vnode'
 
 export function render(vnode, container) {
   // patch
@@ -11,11 +11,14 @@ const patch = (vnode: any, container: any) => {
   const { type, shapeFlag } = vnode
 
   switch (type) {
+    // Text 节点只渲染文本
+    case Text:
+      processText(vnode, container)
+      break
     // Fragment 节点只渲染其子组件
     case Fragment:
       processFragment(vnode, container)
       break
-
     default:
       if (shapeFlag & ShapeFlags.ELEMENT) {
         // 处理 Element
@@ -86,6 +89,15 @@ function setupRenderEffect(instance, initialVNode, container) {
   // 将子元素的 dom 保存到当前节点的 vnode 中
   initialVNode.el = subTree.el
 }
+
+/** 处理插槽中的 VNode 节点，将数组中的节点直接渲染在上层 Element 容器中 */
 function processFragment(vnode: any, container: any) {
   mountChildren(vnode.children, container)
+}
+
+/** 处理文本节点，直接渲染 */
+function processText(vnode: any, container: any) {
+  const { children } = vnode
+  const textNode = document.createTextNode(children as string)
+  container.append(textNode)
 }

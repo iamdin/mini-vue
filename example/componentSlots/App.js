@@ -1,4 +1,4 @@
-import { h } from '../../dist/mini-vue.esm-browser.js'
+import { createTextVNode, h } from '../../dist/mini-vue.esm-browser.js'
 import Foo from './Foo.js'
 
 const App = {
@@ -11,8 +11,13 @@ const App = {
       {},
       // 使用对象的方式渲染插槽
       {
-        header: ({ age }) =>
-          h('p', { name: 'header' }, `slot foo header ${age}`),
+        header: ({ age }) => {
+          return [
+            h('p', { name: 'header' }, `slot foo header ${age}`),
+            // 使用 createTextVNode 渲染组件中的纯文本节点
+            createTextVNode('hello'),
+          ]
+        },
         footer: () => h('p', { name: 'footer' }, 'slot foo footer'),
       }
     )
