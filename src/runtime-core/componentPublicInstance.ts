@@ -6,6 +6,7 @@ export const publicPropertiesMap: PublicPropertiesMap = extend(
   {
     $: (i) => i,
     $el: (i) => i.vnode.el,
+    $slots: (i) => i.slots,
   }
 )
 

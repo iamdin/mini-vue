@@ -6,7 +6,7 @@ export const Foo = {
     return {}
   },
   render() {
-    const bar = h('button', 'emitAdd')
+    const bar = h('button', {}, 'emitAdd')
     const foo = `foo ${this.count}`
     return h('div', {}, [foo, bar])
   },

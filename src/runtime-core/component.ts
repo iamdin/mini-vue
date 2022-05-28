@@ -1,8 +1,9 @@
 import { shallowReadonly } from '../reactivity'
-import { isFunction, isObject, NOOP } from '../shared'
+import { EMPTY_OBJ, isFunction, isObject, NOOP } from '../shared'
 import { emit } from './componentEmits'
 import { initProps } from './componentProps'
 import { PublicInstanceProxyHandlers } from './componentPublicInstance'
+import { initSlots } from './componentSlots'
 
 export function createComponentInstance(vnode) {
   const type = vnode.type
@@ -10,6 +11,20 @@ export function createComponentInstance(vnode) {
   const instance: any = {
     type,
     vnode,
+    proxy: null,
+
+    // emit
+    emit: null!,
+
+    //state
+    ctx: EMPTY_OBJ,
+    data: EMPTY_OBJ,
+    props: EMPTY_OBJ,
+    attrs: EMPTY_OBJ,
+    slots: EMPTY_OBJ,
+    refs: EMPTY_OBJ,
+    setupState: EMPTY_OBJ,
+    setupContext: null,
   }
 
   instance.ctx = { _: instance }
@@ -20,9 +35,11 @@ export function createComponentInstance(vnode) {
 
 /** 组件 setup 的执行 */
 export function setupComponent(instance) {
+  const { props, children } = instance.vnode
   // 初始化组件 Props
-  initProps(instance, instance.vnode.props)
-  // TODO initSlots()
+  initProps(instance, props)
+  // 初始化组件 Slots, 绑定到 instance.slots 中，组件内通过代理 this.$slots 访问
+  initSlots(instance, children)
   setupStatefulComponent(instance)
 }
 

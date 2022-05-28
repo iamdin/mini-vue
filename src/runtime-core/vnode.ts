@@ -1,4 +1,4 @@
-import { isObject, isString, ShapeFlags } from '../shared'
+import { isArray, isFunction, isObject, isString, ShapeFlags } from '../shared'
 
 function createBaseVNode(
   type,
@@ -8,11 +8,18 @@ function createBaseVNode(
 ) {
   const vnode = { type, props, children, shapeFlag }
 
-  if (children) {
-    vnode.shapeFlag |= isString(children)
-      ? ShapeFlags.TEXT_CHILDREN
-      : ShapeFlags.ARRAY_CHILDREN
+  let flag = 0
+  if (!children) {
+    children = null
+  } else if (isArray(children)) {
+    flag = ShapeFlags.ARRAY_CHILDREN
+  } else if (isObject(children)) {
+    flag = ShapeFlags.SLOTS_CHILDREN
+  } else {
+    flag = ShapeFlags.TEXT_CHILDREN
   }
+
+  vnode.shapeFlag |= flag
   return vnode
 }
 
