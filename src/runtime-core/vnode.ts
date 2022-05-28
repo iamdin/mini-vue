@@ -1,5 +1,7 @@
 import { isArray, isFunction, isObject, isString, ShapeFlags } from '../shared'
 
+export const Fragment = Symbol('Fragment')
+
 function createBaseVNode(
   type,
   props,
