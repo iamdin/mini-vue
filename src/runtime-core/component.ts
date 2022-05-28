@@ -33,6 +33,17 @@ export function createComponentInstance(vnode) {
   return instance
 }
 
+// 保存组件实例对象，在 setup 调用时可获取
+export let currentInstance
+
+export const getCurrentInstance = () => currentInstance
+export const setCurrentInstance = (instance) => {
+  currentInstance = instance
+}
+export const unsetCurrentInstance = () => {
+  currentInstance = null
+}
+
 /** 组件 setup 的执行 */
 export function setupComponent(instance) {
   const { props, children } = instance.vnode
@@ -51,6 +62,7 @@ function setupStatefulComponent(instance) {
 
   const { setup } = Component
   if (setup) {
+    setCurrentInstance(instance)
     // setupResult is function | object
     const setupResult = setup(
       // 将 props 作为参数传递给 setup, props 需要是 shallowReadonly
@@ -60,7 +72,7 @@ function setupStatefulComponent(instance) {
         emit: instance.emit,
       }
     )
-
+    unsetCurrentInstance()
     handleSetupResult(instance, setupResult)
   }
 }
