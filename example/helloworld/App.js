@@ -1,14 +1,13 @@
 import { h } from '../../dist/mini-vue.esm-browser.js'
 
-window.self = null
 const App = {
+  name: 'App',
   setup() {
     return {
       msg: 'mini-vue h',
     }
   },
   render() {
-    window.self = this
     return h(
       'div',
       {

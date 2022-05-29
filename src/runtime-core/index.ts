@@ -1,5 +1,4 @@
-export { createApp } from './createApp'
-export { h } from './h'
+export * from './h'
 export * from './helpers/renderSlot'
 export * from './vnode'
 export * from './component'
