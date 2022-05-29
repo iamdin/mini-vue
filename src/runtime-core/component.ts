@@ -5,16 +5,20 @@ import { initProps } from './componentProps'
 import { PublicInstanceProxyHandlers } from './componentPublicInstance'
 import { initSlots } from './componentSlots'
 
-export function createComponentInstance(vnode) {
+export function createComponentInstance(vnode, parent) {
   const type = vnode.type
 
   const instance: any = {
     type,
+    parent,
     vnode,
     proxy: null,
 
     // emit
     emit: null!,
+
+    // provides, 初始化为 父组件的 provides, 方便区分
+    provides: parent ? parent.provides : {},
 
     //state
     ctx: EMPTY_OBJ,
