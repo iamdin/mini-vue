@@ -1,4 +1,4 @@
-import { shallowReadonly } from '../reactivity'
+import { proxyRefs, shallowReadonly } from '../reactivity'
 import { EMPTY_OBJ, isFunction, isObject, NOOP } from '../shared'
 import { emit } from './componentEmits'
 import { initProps } from './componentProps'
@@ -13,6 +13,7 @@ export function createComponentInstance(vnode, parent) {
     parent,
     vnode,
     proxy: null,
+    subTree: null!,
 
     // emit
     emit: null!,
@@ -29,6 +30,9 @@ export function createComponentInstance(vnode, parent) {
     refs: EMPTY_OBJ,
     setupState: EMPTY_OBJ,
     setupContext: null,
+
+    // lifecycle hooks
+    isMounted: false,
   }
 
   instance.ctx = { _: instance }
@@ -86,7 +90,7 @@ export function handleSetupResult(instance: any, setupResult: unknown) {
   if (isFunction(setupResult)) {
     // TODO render()
   } else if (isObject(setupResult)) {
-    instance.setupState = setupResult
+    instance.setupState = proxyRefs(setupResult)
   }
 
   finishComponentSetup(instance)
