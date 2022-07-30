@@ -9,16 +9,17 @@ const targetMap = new WeakMap<any, KeyToDepMap>()
 export let activeEffect: ReactiveEffect | undefined
 
 export class ReactiveEffect<T = any> {
-
   private active = true // 当前对象是否为响应式
   private onStop?: () => void
 
   public deps: Set<ReactiveEffect>[] = []
   // scheduler 存在, 当触发依赖更新时, 会执行 scheduler, 而不是 effect._fn
-// The main Map that stores {target -> key -> dep} connections.
+  // The main Map that stores {target -> key -> dep} connections.
 
-
-  constructor(public fn: () => T, public scheduler: EffectScheduler | null = null) {}
+  constructor(
+    public fn: () => T,
+    public scheduler: EffectScheduler | null = null
+  ) {}
 
   run() {
     // 执行 fn 后会开始收集依赖
@@ -80,7 +81,6 @@ export function effect<T = any>(fn: () => T, options?: ReactiveEffectOptions) {
   return runner
 }
 
-
 /** 停止触发依赖更新 */
 export function stop(runner: ReactiveEffectRunner) {
   runner.effect.stop()
@@ -125,11 +125,12 @@ export function trigger(target, key) {
   }
   const deps = depsMap.get(key)
 
-  triggerEffects(deps)
+  triggerEffects(deps as Dep)
 }
 
-export function triggerEffects(dep) {
-  for (const effect of dep) {
+export function triggerEffects(dep: Dep | ReactiveEffect[]) {
+  const effects = Array.isArray(dep) ? dep : [...dep]
+  for (const effect of effects) {
     if (effect.scheduler) {
       effect.scheduler()
     } else {
@@ -137,5 +138,3 @@ export function triggerEffects(dep) {
     }
   }
 }
-
-
