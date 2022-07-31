@@ -1,5 +1,5 @@
 import { effect } from '../reactivity'
-import { ShapeFlags } from '../shared'
+import { EMPTY_OBJ, ShapeFlags } from '../shared'
 import { createAppAPI } from './apiCreateApp'
 import { createComponentInstance, setupComponent } from './component'
 import { Text, Fragment } from './vnode'
@@ -54,6 +54,7 @@ export function baseCreateRenderer(options) {
     container: any,
     parentComponent
   ) => {
+    // 初始化时 n1 为 null，挂载节点，否则对比两个元素节点
     if (n1 === null) {
       mountElement(n2, container, parentComponent)
     } else {
@@ -72,7 +73,7 @@ export function baseCreateRenderer(options) {
     // for props
     if (props) {
       for (const key in props) {
-        hostPatchProp(el, key, props[key])
+        hostPatchProp(el, key, null, props[key])
       }
     }
 
@@ -93,7 +94,35 @@ export function baseCreateRenderer(options) {
     }
   }
 
-  const patchElement = (n1: any, n2: any, parentComponent: any) => {}
+  const patchElement = (n1: any, n2: any, parentComponent: any) => {
+    // 对新旧元素节点的的 props 进行对比
+    const oldProps = n1.props || EMPTY_OBJ
+    const newProps = n2.props || EMPTY_OBJ
+
+    const el = (n2.el = n1.el)
+    patchProps(el, oldProps, newProps)
+  }
+
+  const patchProps = (el, oldProps, newProps) => {
+    if (oldProps !== newProps) {
+      // 在新节点中修改 或 被赋值为 undefined|null
+      for (const key in newProps) {
+        const next = newProps[key]
+        const prev = oldProps[key]
+        if (next !== prev) {
+          hostPatchProp(el, key, prev, next)
+        }
+      }
+      // 在新节点中属性值被删除
+      if (oldProps !== EMPTY_OBJ) {
+        for (const key in oldProps) {
+          if (!(key in newProps)) {
+            hostPatchProp(el, key, oldProps[key], null)
+          }
+        }
+      }
+    }
+  }
 
   const processComponent = (
     n1: any,
