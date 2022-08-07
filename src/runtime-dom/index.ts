@@ -1,8 +1,8 @@
 import { createRenderer } from '../runtime-core/renderer'
 import { isOn } from '../shared'
 
-function insert(child, parent) {
-  parent.insertBefore(child, null)
+function insert(child, parent, anchor) {
+  parent.insertBefore(child, anchor || null)
 }
 
 function createElement(tag) {
@@ -22,11 +22,24 @@ function patchProp(el, key, prevValue, nextValue) {
   }
 }
 
+function remove(child) {
+  const parent = child && child.parentNode
+  if (parent) {
+    parent.removeChild(child)
+  }
+}
+
+function setElementText(el, text) {
+  el.textContent = text
+}
+
 /** 将自定义渲染函数作为参数，创建渲染器 */
 const renderer: any = createRenderer({
   insert,
+  remove,
   patchProp,
   createElement,
+  setElementText,
 })
 
 export function createApp(...args) {
