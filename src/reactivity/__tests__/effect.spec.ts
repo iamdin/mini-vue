@@ -18,6 +18,59 @@ describe('effect', () => {
     expect(nextAge).toBe(12)
   })
 
+  it('should avoid implicit infinite recursive loops with itself', () => {
+    const counter = reactive({ num: 0 })
+
+    const counterSpy = jest.fn(() => counter.num++)
+    effect(counterSpy)
+    expect(counter.num).toBe(1)
+    expect(counterSpy).toHaveBeenCalledTimes(1)
+    counter.num = 4
+    expect(counter.num).toBe(5)
+    expect(counterSpy).toHaveBeenCalledTimes(2)
+  })
+
+  it('should discover new branches while running automatically', () => {
+    let dummy
+    const obj = reactive({ prop: 'value', run: false })
+
+    const conditionalSpy = jest.fn(() => {
+      dummy = obj.run ? obj.prop : 'other'
+    })
+    effect(conditionalSpy)
+
+    expect(dummy).toBe('other')
+    expect(conditionalSpy).toHaveBeenCalledTimes(1)
+    obj.prop = 'Hi'
+    expect(dummy).toBe('other')
+    expect(conditionalSpy).toHaveBeenCalledTimes(1)
+    obj.run = true
+    expect(dummy).toBe('Hi')
+    expect(conditionalSpy).toHaveBeenCalledTimes(2)
+    obj.prop = 'World'
+    expect(dummy).toBe('World')
+    expect(conditionalSpy).toHaveBeenCalledTimes(3)
+  })
+
+  it('should not be triggered by mutating a property, which is used in an inactive branch', () => {
+    let dummy
+    const obj = reactive({ prop: 'value', run: true })
+
+    const conditionalSpy = jest.fn(() => {
+      dummy = obj.run ? obj.prop : 'other'
+    })
+    effect(conditionalSpy)
+
+    expect(dummy).toBe('value')
+    expect(conditionalSpy).toHaveBeenCalledTimes(1)
+    obj.run = false
+    expect(dummy).toBe('other')
+    expect(conditionalSpy).toHaveBeenCalledTimes(2)
+    obj.prop = 'value2'
+    expect(dummy).toBe('other')
+    expect(conditionalSpy).toHaveBeenCalledTimes(2)
+  })
+
   it('runner', () => {
     const obj = reactive({ prop: 'value' })
     let run = false

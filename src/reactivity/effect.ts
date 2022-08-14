@@ -34,7 +34,10 @@ export class ReactiveEffect<T = any> {
 
       return this.fn()
     } finally {
+      cleanupEffect(this)
+
       shouldTrack = false
+      activeEffect = undefined
     }
   }
 
@@ -123,13 +126,27 @@ export function trigger(target, key) {
   if (!depsMap) {
     return
   }
-  const deps = depsMap.get(key)
+  let deps: (Dep | undefined)[] = []
+  if (key !== void 0) {
+    deps.push(depsMap.get(key))
+  }
 
-  triggerEffects(deps)
+  if (deps.length === 1) {
+    if (deps[0]) {
+      triggerEffects(deps[0])
+    }
+  }
 }
 
-export function triggerEffects(dep) {
-  for (const effect of dep) {
+export function triggerEffects(dep: Dep | ReactiveEffect[]) {
+  const effects = Array.isArray(dep) ? dep : [...dep]
+  for (const effect of effects) {
+    triggerEffect(effect)
+  }
+}
+
+function triggerEffect(effect: ReactiveEffect) {
+  if (effect !== activeEffect) {
     if (effect.scheduler) {
       effect.scheduler()
     } else {
