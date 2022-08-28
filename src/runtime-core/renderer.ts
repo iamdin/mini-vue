@@ -3,6 +3,7 @@ import { EMPTY_ARR, EMPTY_OBJ, ShapeFlags } from '../shared'
 import { createAppAPI } from './apiCreateApp'
 import { createComponentInstance, setupComponent } from './component'
 import { shouldUpdateComponent } from './componentRenderUtils'
+import { queueJob } from './scheduler'
 import { Text, Fragment, isSameVNodeType } from './vnode'
 
 export function createRenderer(options) {
@@ -109,6 +110,7 @@ export function baseCreateRenderer(options) {
     const newProps = n2.props || EMPTY_OBJ
     const el = (n2.el = n1.el)
 
+    console.log('patch element', n1, n2)
     patchChildren(n1, n2, el, null, parentComponent)
 
     patchProps(el, oldProps, newProps)
@@ -410,6 +412,7 @@ export function baseCreateRenderer(options) {
         instance.isMounted = true
       } else {
         let { vnode, next } = instance
+        console.log('component update', vnode, next)
         if (next) {
           next.el = vnode.el
           updateComponentPreRender(instance, next)
@@ -422,7 +425,8 @@ export function baseCreateRenderer(options) {
         patch(prevTree, nextTree, container, null, instance)
       }
     }
-    const effect = new ReactiveEffect(componentUpdateFn)
+    // 组件更新时, 通过 scheduler 将 update 函数加入微任务队列中
+    const effect = new ReactiveEffect(componentUpdateFn, () => queueJob(update))
     const update = (instance.update = () => effect.run())
     update()
   }
