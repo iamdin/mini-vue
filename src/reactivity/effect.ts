@@ -138,9 +138,6 @@ export function trigger(target, key) {
   }
 }
 
-  triggerEffects(deps as Dep)
-}
-
 export function triggerEffects(dep: Dep | ReactiveEffect[]) {
   const effects = Array.isArray(dep) ? dep : [...dep]
   for (const effect of effects) {

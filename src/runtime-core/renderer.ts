@@ -1,7 +1,8 @@
-import { effect } from '../reactivity'
+import { effect, ReactiveEffect } from '../reactivity'
 import { EMPTY_ARR, EMPTY_OBJ, ShapeFlags } from '../shared'
 import { createAppAPI } from './apiCreateApp'
 import { createComponentInstance, setupComponent } from './component'
+import { shouldUpdateComponent } from './componentRenderUtils'
 import { Text, Fragment, isSameVNodeType } from './vnode'
 
 export function createRenderer(options) {
@@ -315,7 +316,6 @@ export function baseCreateRenderer(options) {
         }
       }
     }
-    console.log(i)
   }
 
   const unmount = (vnode) => {
@@ -357,7 +357,22 @@ export function baseCreateRenderer(options) {
     anchor,
     parentComponent
   ) => {
-    mountComponent(n2, container, anchor, parentComponent)
+    if (n1 == null) {
+      mountComponent(n2, container, anchor, parentComponent)
+    } else {
+      updateComponent(n1, n2)
+    }
+  }
+
+  const updateComponent = (n1, n2) => {
+    const instance = (n2.component = n1.component)
+    if (shouldUpdateComponent(n1, n2)) {
+      instance.next = n2
+      instance.update()
+    } else {
+      n2.el = n1.el
+      instance.vnode = n2
+    }
   }
 
   /** 挂在组件，生成组件实例，执行 setup 及 render */
@@ -368,7 +383,10 @@ export function baseCreateRenderer(options) {
     parentComponent
   ) => {
     // 创建组件实例, 初始化 ctx, emit
-    const instance = createComponentInstance(initialVNode, parentComponent)
+    const instance = (initialVNode.component = createComponentInstance(
+      initialVNode,
+      parentComponent
+    ))
     // initProps, initSlots, 执行组件的 setup 获取 setupState, 初始化 render (如有需要 compile)
     setupComponent(instance)
     // 执行组件的 render
@@ -377,7 +395,7 @@ export function baseCreateRenderer(options) {
 
   const setupRenderEffect = (instance, initialVNode, container, anchor) => {
     // effect 收集render函数中的依赖，当响应式数据变化时，会重新执行 render 函数
-    effect(() => {
+    const componentUpdateFn = () => {
       // !isMounted 为初始化阶段，否则为更新
       if (!instance.isMounted) {
         // 调用组件渲染函数，获取当前组件的 vnode, instance.proxy 用来代理 render 函数中的 this，使其访问到当前组件实例如 $, $el 等
@@ -391,13 +409,30 @@ export function baseCreateRenderer(options) {
 
         instance.isMounted = true
       } else {
+        let { vnode, next } = instance
+        if (next) {
+          next.el = vnode.el
+          updateComponentPreRender(instance, next)
+        } else {
+          next = vnode
+        }
         const nextTree = instance.render.call(instance.proxy)
         const prevTree = instance.subTree
         instance.subTree = nextTree
-        console.log('update', prevTree, nextTree)
         patch(prevTree, nextTree, container, null, instance)
       }
-    })
+    }
+    const effect = new ReactiveEffect(componentUpdateFn)
+    const update = (instance.update = () => effect.run())
+    update()
+  }
+
+  const updateComponentPreRender = (instance, nextVNode) => {
+    nextVNode.component = instance
+    instance.vnode = nextVNode
+    instance.next = null
+
+    instance.props = nextVNode.props
   }
 
   /** 处理插槽中的 VNode 节点，将数组中的节点直接渲染在上层 Element 容器中 */
@@ -465,5 +500,3 @@ function getSequence(arr: number[]): number[] {
   }
   return result
 }
-
-getSequence([4, 5, 2, 1, -1, 3, 2, 5])

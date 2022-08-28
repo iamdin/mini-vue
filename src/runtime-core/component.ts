@@ -12,8 +12,11 @@ export function createComponentInstance(vnode, parent) {
     type,
     parent,
     vnode,
+    next: null,
     proxy: null,
     subTree: null!,
+
+    components: null,
 
     // emit
     emit: null!,
