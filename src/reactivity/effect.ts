@@ -141,12 +141,6 @@ export function trigger(target, key) {
 export function triggerEffects(dep: Dep | ReactiveEffect[]) {
   const effects = Array.isArray(dep) ? dep : [...dep]
   for (const effect of effects) {
-    triggerEffect(effect)
-  }
-}
-
-function triggerEffect(effect: ReactiveEffect) {
-  if (effect !== activeEffect) {
     if (effect.scheduler) {
       effect.scheduler()
     } else {
