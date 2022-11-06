@@ -102,8 +102,17 @@ export function handleSetupResult(instance: any, setupResult: unknown) {
 /** setup 后执行 compile 函数（如有需要），转换为 render */
 function finishComponentSetup(instance: any) {
   const Component = instance.type
-  if (!Component.render) {
-    // TODO compile
+  if (!Component.render && compile) {
+    if (Component.template) {
+      Component.render = compile(Component.template)
+    }
   }
   instance.render = Component.render || NOOP
+}
+
+let compile
+
+// 抛出注册模块, runtime-core 模块不要直接依赖 compile 模块, 实现解耦
+export function registerRuntimeCompiler(_compile) {
+  compile = _compile
 }

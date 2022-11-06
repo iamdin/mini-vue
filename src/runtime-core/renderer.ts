@@ -1,4 +1,4 @@
-import { effect, ReactiveEffect } from '../reactivity'
+import { ReactiveEffect } from '../reactivity'
 import { EMPTY_ARR, EMPTY_OBJ, ShapeFlags } from '../shared'
 import { createAppAPI } from './apiCreateApp'
 import { createComponentInstance, setupComponent } from './component'
@@ -402,6 +402,7 @@ export function baseCreateRenderer(options) {
       if (!instance.isMounted) {
         // 调用组件渲染函数，获取当前组件的 vnode, instance.proxy 用来代理 render 函数中的 this，使其访问到当前组件实例如 $, $el 等
         const subTree = (instance.subTree = instance.render.call(
+          instance.proxy,
           instance.proxy
         ))
         // 继续处理组件的子节点
@@ -419,7 +420,7 @@ export function baseCreateRenderer(options) {
         } else {
           next = vnode
         }
-        const nextTree = instance.render.call(instance.proxy)
+        const nextTree = instance.render.call(instance.proxy, instance.proxy)
         const prevTree = instance.subTree
         instance.subTree = nextTree
         patch(prevTree, nextTree, container, null, instance)
