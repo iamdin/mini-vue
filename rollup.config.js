@@ -1,13 +1,12 @@
 import typescript from '@rollup/plugin-typescript'
-import pkg from './package.json'
 
 export default {
-  input: './src/index.ts',
+  input: './packages/vue/src/index.ts',
   output: [
     // cjs
-    { format: 'cjs', file: pkg.main },
+    { format: 'cjs', file: 'packages/vue/dist/mini-vue.cjs.js' },
     // esm
-    { format: 'es', file: pkg.module },
+    { format: 'es', file: 'packages/vue/dist/mini-vue.esm-browser.js' },
   ],
   plugins: [typescript()],
   onwarn: (msg, warn) => {
