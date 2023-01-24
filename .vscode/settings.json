@@ -4,6 +4,8 @@
   "prettier.printWidth": 80,
   "prettier.singleQuote": true,
   "editor.formatOnSave": true,
+  "typescript.suggest.autoImports": true,
+  "typescript.tsdk": "node_modules/typescript/lib",
   "editor.defaultFormatter": "esbenp.prettier-vscode",
   "[html]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode"

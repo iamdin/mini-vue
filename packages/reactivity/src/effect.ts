@@ -10,9 +10,9 @@ export let activeEffect: ReactiveEffect | undefined
 
 export class ReactiveEffect<T = any> {
   private active = true // 当前对象是否为响应式
-  private onStop?: () => void
 
-  public deps: Set<ReactiveEffect>[] = []
+  onStop?: () => void
+  deps: Set<ReactiveEffect>[] = []
   // scheduler 存在, 当触发依赖更新时, 会执行 scheduler, 而不是 effect._fn
   // The main Map that stores {target -> key -> dep} connections.
 
